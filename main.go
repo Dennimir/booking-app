@@ -3,6 +3,7 @@ package main
 import (
 	"booking-app/helper"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -19,28 +20,31 @@ type UserData struct {
 	userTickets   uint8
 }
 
+var wg = sync.WaitGroup{}
+
 func main() {
 
 	greetUsers()
 
-	for {
-		userFirstName, userLastName, userEmail, userTickets := receiveUserInput()
-		isValidName, isValidEmail, isValidTicketNumber := helper.InputValidation(userFirstName, userLastName, userEmail, userTickets, remainingtickets)
+	userFirstName, userLastName, userEmail, userTickets := receiveUserInput()
+	isValidName, isValidEmail, isValidTicketNumber := helper.InputValidation(userFirstName, userLastName, userEmail, userTickets, remainingtickets)
 
-		if isValidName && isValidEmail && isValidTicketNumber {
-			bookTicket(userTickets, userFirstName, userLastName, userEmail)
-			sendTicket(userTickets, userFirstName, userLastName, userEmail)
-			printFirstNames(bookings)
+	if isValidName && isValidEmail && isValidTicketNumber {
+		bookTicket(userTickets, userFirstName, userLastName, userEmail)
+		wg.Add(1)
+		go sendTicket(userTickets, userFirstName, userLastName, userEmail)
 
-			if remainingtickets == 0 {
-				//end program
-				fmt.Println("Our conference is booked out. Come back next year")
-				break
-			}
-		} else {
-			errorPrint(isValidName, isValidEmail, isValidTicketNumber)
+		printFirstNames(bookings)
+
+		if remainingtickets == 0 {
+			//end program
+			fmt.Println("Our conference is booked out. Come back next year")
+			//break
 		}
+	} else {
+		errorPrint(isValidName, isValidEmail, isValidTicketNumber)
 	}
+	wg.Wait()
 }
 
 func greetUsers() {
@@ -116,4 +120,5 @@ func sendTicket(userTickets uint8, userFirstName string, userLastName string, us
 	fmt.Println("#################")
 	fmt.Printf("Sending ticket:\n %v \nto email %v\n", ticket, userEmail)
 	fmt.Println("#################")
+	wg.Done()
 }
