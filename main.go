@@ -10,7 +10,7 @@ import (
 const conferenceName string = "Go Conference"
 const conferenceTickets uint8 = 50
 
-var bookings = []UserData{} //make([]map[string]string)
+var bookings []UserData //make([]map[string]string)
 var remainingtickets uint8 = conferenceTickets
 
 type UserData struct {
